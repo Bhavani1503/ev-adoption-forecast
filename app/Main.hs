@@ -1,73 +1,44 @@
-module Main where
+-- Main.hs
 
 import System.IO
-import Text.Printf
+import System.Process (callCommand)
+import Data.List
+import Data.List.Split (splitOn)
 
--- Split CSV line by comma
-splitComma :: String -> [String]
-splitComma [] = []
-splitComma s =
-  let (w, s') = break (== ',') s
-  in w : case s' of
-       [] -> []
-       (_:rest) -> splitComma rest
+type Row = (Int, Double)
 
--- Convert CSV row to (Year, Sales)
-parseRow :: String -> (Int, Double)
-parseRow row =
-  let parts = splitComma row
-  in (read (parts !! 0), read (parts !! 1))
+-- Parse CSV
+parseCSV :: String -> [Row]
+parseCSV content =
+    let ls = tail (lines content)
+    in map (\l -> let [y,v] = splitOn "," l
+                  in (read y, read v)) ls
 
--- Read CSV dataset
-readCSV :: String -> [(Int, Double)]
-readCSV content =
-  let rows = tail (lines content)
-  in map parseRow rows
+-- Lazy fold to compute cumulative growth
+lazyFoldGrowth :: [Row] -> [(Int, Double)]
+lazyFoldGrowth = scanl1 (\(_,prev) (y,v) -> (y, prev + v*0.05))
 
--- Calculate average growth using fold
-avgGrowth :: [(Int, Double)] -> Double
-avgGrowth xs =
-  let sales = map snd xs
-      diffs = zipWith (-) (tail sales) sales
-  in foldl (+) 0 diffs / fromIntegral (length diffs)
-
--- Logistic prediction model
-predictEV :: Double -> Double -> Double -> Int -> Double
-predictEV k r t year =
-  k / (1 + exp (-r * (fromIntegral year - t)))
+-- Convert to JSON
+toJSON :: [(Int, Double)] -> String
+toJSON xs =
+    "[\n" ++ intercalate ",\n"
+        [ "{ \"year\": " ++ show y ++ ", \"value\": " ++ show v ++ " }"
+        | (y,v) <- xs ] ++ "\n]"
 
 main :: IO ()
 main = do
+    putStrLn "Reading CSV..."
 
-  putStrLn "Reading EV dataset..."
+    content <- readFile "data/ev_sales.csv"
+    let rows = parseCSV content
 
-  content <- readFile "data/ev_sales.csv"
+    -- Lazy fold computation
+    let result = lazyFoldGrowth rows
 
-  let dataset = readCSV content
-  let growth = avgGrowth dataset
+    putStrLn "Writing JSON..."
+    writeFile "output.json" (toJSON result)
 
-  putStrLn ("Average Growth Rate: " ++ show growth)
-
-  -- Carrying capacity (max EV market size estimate)
-  let k = 100000000
-
-  -- Midpoint year
-  let t = 2025
-
-  -- Predict EV adoption
-  let predictions =
-        [ (year, predictEV k growth t year)
-        | year <- [2024..2030]
-        ]
-
-  putStrLn "\nPredicted EV Adoption:"
-  mapM_ print predictions
-
-  -- Convert predictions to CSV
-  let csvHeader = "Year,Prediction\n"
-  let csvRows = concatMap (\(y,v) -> show y ++ "," ++ show v ++ "\n") predictions
-  let output = csvHeader ++ csvRows
-
-  writeFile "results/predictions.csv" output
-
-  putStrLn "\nPredictions saved to results/predictions.csv"
+    putStrLn "Opening Dashboard..."
+    callCommand "python3 -m http.server 8000 --directory web"
+   
+    putStrLn "Done!"
