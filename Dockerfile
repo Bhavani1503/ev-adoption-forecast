@@ -1,11 +1,11 @@
-FROM haskell:9.4
-
-RUN apt-get update && apt-get install -y python3
+FROM python:3.11-slim
 
 WORKDIR /app
 
 COPY . .
 
-RUN cabal update && cabal build
+WORKDIR /app/web
 
-CMD bash -c "cabal run && cd web && python3 -m http.server 10000"
+EXPOSE 10000
+
+CMD ["python3", "-m", "http.server", "10000"]
