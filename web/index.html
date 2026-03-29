@@ -1,357 +1,440 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<title>EV Adoption Forecast Dashboard</title>
-
+<title>EV Adoption Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
 
-body{
-font-family: "Segoe UI", Arial;
-margin:0;
-background:linear-gradient(120deg,#eef2f7,#dbeafe);
-color:#333;
-animation:fadeIn 1s ease;
-}
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    min-height: 100vh;
+  }
 
-/* HEADER */
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+    color: white;
+    padding: 44px 32px 36px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 55% 70% at 85% 50%, rgba(255,255,255,0.08) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.4px; position: relative; }
+  header p  { margin-top: 8px; font-size: 13px; opacity: 0.65; font-family: 'JetBrains Mono', monospace; position: relative; }
 
-header{
-background:linear-gradient(135deg,#0f172a,#1e3a8a);
-color:white;
-padding:60px 20px;
-text-align:center;
-box-shadow:0 6px 20px rgba(0,0,0,0.25);
-}
+  .header-stats {
+    display: flex; justify-content: center; gap: 16px;
+    margin-top: 24px; flex-wrap: wrap; position: relative;
+  }
+  .hstat {
+    background: rgba(255,255,255,0.13);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px; padding: 10px 20px; min-width: 100px;
+  }
+  .hstat-val { font-size: 20px; font-weight: 700; line-height: 1; }
+  .hstat-lbl { font-size: 10px; opacity: 0.65; margin-top: 3px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; }
 
-header h1{
-font-size:40px;
-margin:0;
-letter-spacing:1px;
-}
+  /* NAV */
+  nav {
+    background: #1e293b;
+    display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+    padding: 12px 20px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  nav button {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.15);
+    padding: 8px 20px; color: #94a3b8; border-radius: 6px; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.4px;
+    transition: all 0.15s;
+  }
+  nav button:hover { color: white; border-color: rgba(255,255,255,0.4); }
+  nav button.active { background: #3b82f6; border-color: #3b82f6; color: white; }
 
-header p{
-margin-top:10px;
-opacity:0.9;
-font-size:16px;
-}
+  /* SECTIONS */
+  .section { display: none; max-width: 1000px; margin: 0 auto; padding: 44px 20px; animation: fadeIn 0.3s ease; }
+  .section.active { display: block; }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
 
-/* NAVIGATION */
+  .sec-title { font-size: 19px; font-weight: 600; margin-bottom: 4px; color: #0f172a; }
+  .sec-sub   { font-size: 12px; color: #64748b; font-family: 'JetBrains Mono', monospace; margin-bottom: 28px; }
 
-nav{
-display:flex;
-justify-content:center;
-gap:20px;
-background:#1e293b;
-padding:15px;
-box-shadow:0 4px 10px rgba(0,0,0,0.2);
-}
+  /* STAT CARDS */
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px,1fr)); gap: 14px; margin-bottom: 32px; }
+  .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 16px; border-left: 4px solid #3b82f6; }
+  .stat-card.green  { border-left-color: #22c55e; }
+  .stat-card.amber  { border-left-color: #f59e0b; }
+  .stat-card.purple { border-left-color: #8b5cf6; }
+  .stat-card.rose   { border-left-color: #f43f5e; }
+  .stat-card label  { font-size: 10px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 1px; font-family: 'JetBrains Mono', monospace; }
+  .stat-card .val   { font-size: 24px; font-weight: 700; color: #0f172a; margin-top: 5px; line-height: 1; }
+  .stat-card .sub   { font-size: 11px; color: #94a3b8; margin-top: 3px; }
 
-nav button{
-background:#3b82f6;
-border:none;
-padding:12px 22px;
-color:white;
-border-radius:10px;
-font-size:15px;
-cursor:pointer;
-transition:all 0.3s ease;
-}
+  /* TABLE */
+  .table-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 24px; }
+  .table-head { padding: 14px 18px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+  .table-head h3 { font-size: 14px; font-weight: 600; color: #0f172a; }
+  .tag { background: #eff6ff; color: #3b82f6; font-family: 'JetBrains Mono', monospace; font-size: 9px; padding: 3px 10px; border-radius: 100px; border: 1px solid #bfdbfe; font-weight: 500; }
+  .tag.green { background: #f0fdf4; color: #16a34a; border-color: #bbf7d0; }
 
-nav button:hover{
-background:#2563eb;
-transform:translateY(-3px);
-box-shadow:0 6px 14px rgba(0,0,0,0.25);
-}
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 10px 18px; text-align: left; font-size: 13px; border-bottom: 1px solid #f8fafc; }
+  th { background: #f8fafc; color: #64748b; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; }
+  td { color: #374151; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  td.num  { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #0f172a; }
+  td.up   { color: #16a34a; font-size: 12px; font-family: 'JetBrains Mono', monospace; }
+  td.pred { color: #d97706; font-weight: 600; font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  tr.pred-row td { background: #fffbeb; }
+  tr.pred-row:hover td { background: #fef3c7; }
 
-/* SECTIONS */
+  /* CHART CARDS */
+  .chart-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; margin-bottom: 20px; }
+  .chart-card h3 { font-size: 14px; font-weight: 600; color: #0f172a; margin-bottom: 3px; }
+  .chart-card .csub { font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; margin-bottom: 18px; }
 
-.content{
-padding:60px 20px;
-max-width:1100px;
-margin:auto;
-text-align:center;
-}
+  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media(max-width:620px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    .header-stats { gap: 10px; }
+    nav button { padding: 7px 14px; }
+  }
 
-.hidden{
-display:none;
-}
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .lpill  { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #374151; }
+  .ldot   { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .ldash  { width: 18px; height: 3px; border-radius: 2px; flex-shrink: 0; }
 
-h2{
-font-size:30px;
-margin-bottom:30px;
-}
+  /* INFO */
+  .info-box {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-left: 4px solid #3b82f6;
+    border-radius: 10px; padding: 14px 18px; margin-bottom: 24px;
+    font-size: 13px; color: #1e3a8a; line-height: 1.7;
+  }
+  .info-box strong { font-weight: 600; }
 
-/* CARDS */
+  /* PIPELINE */
+  .pipeline { display: flex; background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; flex-wrap: wrap; margin-top: 28px; }
+  .pipe-step { flex: 1; min-width: 140px; padding: 20px 14px; border-right: 1px solid #f1f5f9; text-align: center; }
+  .pipe-step:last-child { border-right: none; }
+  .pipe-step:hover { background: #f8fafc; }
+  .p-num  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #3b82f6; letter-spacing: 2px; margin-bottom: 6px; }
+  .p-name { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: #0f172a; }
+  .p-desc { font-size: 11px; color: #64748b; margin-top: 3px; }
 
-.cards{
-display:flex;
-justify-content:center;
-gap:25px;
-flex-wrap:wrap;
-margin-top:40px;
-}
-
-.card{
-background:white;
-padding:30px;
-border-radius:12px;
-box-shadow:0 10px 25px rgba(0,0,0,0.1);
-width:220px;
-transition:all 0.3s ease;
-}
-
-.card:hover{
-transform:translateY(-8px);
-box-shadow:0 14px 35px rgba(0,0,0,0.15);
-}
-
-.card h3{
-color:#2563eb;
-margin-bottom:10px;
-}
-
-/* TABLE */
-
-table{
-width:70%;
-margin:auto;
-border-collapse:collapse;
-background:white;
-border-radius:10px;
-overflow:hidden;
-box-shadow:0 6px 18px rgba(0,0,0,0.15);
-}
-
-th{
-background:#3b82f6;
-color:white;
-padding:12px;
-}
-
-td{
-padding:12px;
-border-bottom:1px solid #eee;
-}
-
-tr:hover{
-background:#f1f5f9;
-}
-
-/* CHART */
-
-canvas{
-max-width:850px;
-margin:auto;
-display:block;
-background:white;
-padding:20px;
-border-radius:12px;
-box-shadow:0 8px 20px rgba(0,0,0,0.15);
-}
-
-/* FOOTER */
-
-footer{
-background:#0f172a;
-color:white;
-text-align:center;
-padding:25px;
-margin-top:60px;
-font-size:14px;
-letter-spacing:0.5px;
-}
-
-/* PAGE FADE ANIMATION */
-
-@keyframes fadeIn{
-from{opacity:0; transform:translateY(10px);}
-to{opacity:1; transform:translateY(0);}
-}
-
+  /* FOOTER */
+  footer { background: #1e293b; color: #64748b; text-align: center; padding: 20px; font-size: 11px; font-family: 'JetBrains Mono', monospace; margin-top: 40px; }
+  footer span { color: #60a5fa; }
 </style>
 </head>
-
 <body>
 
 <header>
-
-<h1>EV Adoption Forecast Dashboard</h1>
-<p>Forecasting Global Electric Vehicle Trends using Haskell</p>
-
+  <h1>⚡ EV Adoption Dashboard</h1>
+  <div class="header-stats">
+    <div class="hstat"><div class="hstat-val">15</div><div class="hstat-lbl">History Years</div></div>
+    <div class="hstat"><div class="hstat-val">11M</div><div class="hstat-lbl">2024 Sales</div></div>
+    <div class="hstat"><div class="hstat-val">~44M</div><div class="hstat-lbl">2030 Forecast</div></div>
+    <div class="hstat"><div class="hstat-val">26%</div><div class="hstat-lbl">Avg Growth/yr</div></div>
+  </div>
 </header>
 
-
 <nav>
-
-<button onclick="showSection('overview')">Overview</button>
-<button onclick="showSection('dataset')">Dataset</button>
-<button onclick="showSection('prediction')">Predictions</button>
-<button onclick="showSection('visualization')">Visualization</button>
-
+  <button class="active" onclick="show('overview',this)">Overview</button>
+  <button onclick="show('dataset',this)">Dataset</button>
+  <button onclick="show('predictions',this)">Predictions</button>
+  <button onclick="show('charts',this)">Charts</button>
 </nav>
 
+<!-- ═══════════════ OVERVIEW ═══════════════ -->
+<section id="overview" class="section active">
+  <div class="sec-title">Project Overview</div>
+
+  <div class="stat-row">
+    <div class="stat-card"><label>Dataset</label><div class="val">15</div><div class="sub">Years · 2010–2024</div></div>
+    <div class="stat-card green"><label>Peak Sales</label><div class="val">11M</div><div class="sub">Units in 2024</div></div>
+    <div class="stat-card amber"><label>Avg Growth</label><div class="val">26%</div><div class="sub">Per year (historical)</div></div>
+    <div class="stat-card purple"><label>Algorithm</label><div class="val" style="font-size:16px">scanl1</div><div class="sub">Haskell Lazy Fold</div></div>
+    <div class="stat-card rose"><label>2030 Forecast</label><div class="val">~44M</div><div class="sub">Growth model</div></div>
+  </div>
 
 
-<section id="overview" class="content">
 
-<h2>Project Overview</h2>
+  <div class="pipeline">
+    <div class="pipe-step"><div class="p-num">01</div><div class="p-name">📥 Read CSV</div><div class="p-desc">data.csv loaded</div></div>
+    <div class="pipe-step"><div class="p-num">02</div><div class="p-name">⚡ Parse</div><div class="p-desc">Year + Sales rows</div></div>
+    <div class="pipe-step"><div class="p-num">03</div><div class="p-name">📐 Growth Rate</div><div class="p-desc">Avg YoY via fold</div></div>
+    <div class="pipe-step"><div class="p-num">04</div><div class="p-name">🔮 Predict</div><div class="p-desc">2025–2030 scanl</div></div>
+    <div class="pipe-step"><div class="p-num">05</div><div class="p-name">📊 Visualize</div><div class="p-desc">Charts rendered</div></div>
+  </div>
+</section>
 
-<p>
+<!-- ═══════════════ DATASET ═══════════════ -->
+<section id="dataset" class="section">
+  <div class="sec-title">EV Sales Dataset</div>
+  <div class="sec-sub">// data.csv · Global_EV_Sales · 2010–2024</div>
 
-This project forecasts global EV adoption trends using a declarative
-Haskell prediction model. The backend generates predictions which
-are visualized in this dashboard.
+  <div class="table-card">
+    <div class="table-head"><h3>Global EV Sales · Raw Data</h3><span class="tag">data.csv</span></div>
+    <table>
+      <tr><th>Year</th><th>Sales (Units)</th><th>YoY Change</th><th>Growth %</th></tr>
+      <tr><td>2010</td><td class="num">7,000</td><td>—</td><td>—</td></tr>
+      <tr><td>2011</td><td class="num">40,000</td><td>+33,000</td><td class="up">↑ +471%</td></tr>
+      <tr><td>2012</td><td class="num">58,000</td><td>+18,000</td><td class="up">↑ +45%</td></tr>
+      <tr><td>2013</td><td class="num">110,000</td><td>+52,000</td><td class="up">↑ +90%</td></tr>
+      <tr><td>2014</td><td class="num">200,000</td><td>+90,000</td><td class="up">↑ +82%</td></tr>
+      <tr><td>2015</td><td class="num">330,000</td><td>+130,000</td><td class="up">↑ +65%</td></tr>
+      <tr><td>2016</td><td class="num">470,000</td><td>+140,000</td><td class="up">↑ +42%</td></tr>
+      <tr><td>2017</td><td class="num">760,000</td><td>+290,000</td><td class="up">↑ +62%</td></tr>
+      <tr><td>2018</td><td class="num">1,400,000</td><td>+640,000</td><td class="up">↑ +84%</td></tr>
+      <tr><td>2019</td><td class="num">1,500,000</td><td>+100,000</td><td class="up">↑ +7%</td></tr>
+      <tr><td>2020</td><td class="num">2,000,000</td><td>+500,000</td><td class="up">↑ +33%</td></tr>
+      <tr><td>2021</td><td class="num">4,700,000</td><td>+2,700,000</td><td class="up">↑ +135%</td></tr>
+      <tr><td>2022</td><td class="num">7,300,000</td><td>+2,600,000</td><td class="up">↑ +55%</td></tr>
+      <tr><td>2023</td><td class="num">9,500,000</td><td>+2,200,000</td><td class="up">↑ +30%</td></tr>
+      <tr><td>2024</td><td class="num">11,000,000</td><td>+1,500,000</td><td class="up">↑ +16%</td></tr>
+    </table>
+  </div>
+</section>
 
-</p>
+<!-- ═══════════════ PREDICTIONS ═══════════════ -->
+<section id="predictions" class="section">
+  <div class="sec-title">Predictions · 2025–2030</div>
 
-<div class="cards">
+  <div class="stat-row" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
+    <div class="stat-card amber"><label>2025</label><div class="val" style="font-size:20px">13.9M</div></div>
+    <div class="stat-card amber"><label>2026</label><div class="val" style="font-size:20px">17.5M</div></div>
+    <div class="stat-card amber"><label>2027</label><div class="val" style="font-size:20px">22.0M</div></div>
+    <div class="stat-card amber"><label>2028</label><div class="val" style="font-size:20px">27.7M</div></div>
+    <div class="stat-card amber"><label>2029</label><div class="val" style="font-size:20px">34.9M</div></div>
+    <div class="stat-card amber"><label>2030</label><div class="val" style="font-size:20px">44.0M</div></div>
+  </div>
 
-<div class="card">
-<h3>Technology</h3>
-<p>Haskell, Python, C, JavaScript</p>
-</div>
+  <div class="table-card">
+    <div class="table-head"><h3>Historical + Predicted Sales · 2010–2030</h3><span class="tag">avg growth ≈ 26%/yr</span></div>
+    <table>
+      <tr><th>Year</th><th>Sales (Units)</th><th>Growth %</th><th>Type</th></tr>
+      <tr><td>2010</td><td class="num">7,000</td><td>—</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2011</td><td class="num">40,000</td><td class="up">↑ +471%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2012</td><td class="num">58,000</td><td class="up">↑ +45%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2013</td><td class="num">110,000</td><td class="up">↑ +90%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2014</td><td class="num">200,000</td><td class="up">↑ +82%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2015</td><td class="num">330,000</td><td class="up">↑ +65%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2016</td><td class="num">470,000</td><td class="up">↑ +42%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2017</td><td class="num">760,000</td><td class="up">↑ +62%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2018</td><td class="num">1,400,000</td><td class="up">↑ +84%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2019</td><td class="num">1,500,000</td><td class="up">↑ +7%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2020</td><td class="num">2,000,000</td><td class="up">↑ +33%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2021</td><td class="num">4,700,000</td><td class="up">↑ +135%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2022</td><td class="num">7,300,000</td><td class="up">↑ +55%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2023</td><td class="num">9,500,000</td><td class="up">↑ +30%</td><td><span class="tag">Historical</span></td></tr>
+      <tr><td>2024</td><td class="num">11,000,000</td><td class="up">↑ +16%</td><td><span class="tag">Historical</span></td></tr>
+      <tr class="pred-row"><td>2025</td><td class="pred">13,860,000</td><td class="up">↑ +26%</td><td><span class="tag green">Predicted</span></td></tr>
+      <tr class="pred-row"><td>2026</td><td class="pred">17,463,600</td><td class="up">↑ +26%</td><td><span class="tag green">Predicted</span></td></tr>
+      <tr class="pred-row"><td>2027</td><td class="pred">22,004,136</td><td class="up">↑ +26%</td><td><span class="tag green">Predicted</span></td></tr>
+      <tr class="pred-row"><td>2028</td><td class="pred">27,725,211</td><td class="up">↑ +26%</td><td><span class="tag green">Predicted</span></td></tr>
+      <tr class="pred-row"><td>2029</td><td class="pred">34,933,766</td><td class="up">↑ +26%</td><td><span class="tag green">Predicted</span></td></tr>
+      <tr class="pred-row"><td>2030</td><td class="pred">44,016,545</td><td class="up">↑ +26%</td><td><span class="tag green">Predicted</span></td></tr>
+    </table>
+  </div>
+</section>
 
-<div class="card">
-<h3>Dataset</h3>
-<p>IEA Global EV Data</p>
-</div>
+<!-- ═══════════════ CHARTS ═══════════════ -->
+<section id="charts" class="section">
+  <div class="sec-title">Visualizations</div>
 
-<div class="card">
-<h3>Model</h3>
-<p>Lazy Fold Growth Prediction</p>
-</div>
+  <!-- Chart 1: Full trend line -->
+  <div class="chart-card">
+    <h3>EV Sales · Historical + Predicted · 2010–2030</h3>
+    <div class="csub">Blue = historical data · Orange dashed = Haskell prediction</div>
+    <div class="legend">
+      <div class="lpill"><div class="ldot" style="background:#3b82f6"></div>Historical Sales</div>
+      <div class="lpill"><div class="ldash" style="background:#f59e0b"></div>Predicted (Haskell)</div>
+    </div>
+    <canvas id="salesChart"></canvas>
+  </div>
 
-</div>
-
+  <!-- Chart 2 + 3 -->
+  <div class="chart-grid">
+    <div class="chart-card">
+      <h3>Predicted Sales · 2025–2030</h3>
+      <div class="csub">Haskell growth model forecast only</div>
+      <canvas id="predChart"></canvas>
+    </div>
+    <div class="chart-card">
+      <h3>Year-on-Year Growth %</h3>
+      <div class="csub">Blue = historical · Orange = predicted</div>
+      <canvas id="pctChart"></canvas>
+    </div>
+  </div>
 </section>
 
 
+<script>
+// ── DATA ────────────────────────────────────────────────────
+const historical = [
+  {year:2010,sales:7000},       {year:2011,sales:40000},
+  {year:2012,sales:58000},      {year:2013,sales:110000},
+  {year:2014,sales:200000},     {year:2015,sales:330000},
+  {year:2016,sales:470000},     {year:2017,sales:760000},
+  {year:2018,sales:1400000},    {year:2019,sales:1500000},
+  {year:2020,sales:2000000},    {year:2021,sales:4700000},
+  {year:2022,sales:7300000},    {year:2023,sales:9500000},
+  {year:2024,sales:11000000},
+];
 
-<section id="dataset" class="content hidden">
+const predicted = [
+  {year:2025,sales:13860000},   {year:2026,sales:17463600},
+  {year:2027,sales:22004136},   {year:2028,sales:27725211},
+  {year:2029,sales:34933766},   {year:2030,sales:44016545},
+];
 
-<h2>EV Historical Dataset</h2>
+const allData  = [...historical, ...predicted];
+const allYears = allData.map(d => d.year);
+const allSales = allData.map(d => d.sales);
+const H = historical.length; // 15
 
-<table>
-
-<tr>
-<th>Year</th>
-<th>EV Sales (Million)</th>
-</tr>
-
-<tr><td>2018</td><td>2.05</td></tr>
-<tr><td>2019</td><td>2.26</td></tr>
-<tr><td>2020</td><td>3.10</td></tr>
-<tr><td>2021</td><td>6.75</td></tr>
-<tr><td>2022</td><td>10.50</td></tr>
-<tr><td>2023</td><td>14.00</td></tr>
-
-</table>
-
-</section>
-
-
-
-<section id="prediction" class="content hidden">
-
-<h2>Predicted EV Adoption</h2>
-
-<table>
-
-<tr>
-<th>Year</th>
-<th>Predicted EV Sales</th>
-</tr>
-
-<tr><td>2024</td><td>18.4</td></tr>
-<tr><td>2025</td><td>24.2</td></tr>
-<tr><td>2026</td><td>31.1</td></tr>
-<tr><td>2027</td><td>38.5</td></tr>
-<tr><td>2028</td><td>45.2</td></tr>
-
-</table>
-
-</section>
-
-
-
-<section id="visualization" class="content hidden">
-
-<h2>EV Adoption Trend</h2>
-
-<canvas id="evChart" width="800" height="400"></canvas>
-
-</section>
-
-
-
-<footer>
-
-<p>EV Forecasting Mini Project | Haskell + Web Dashboard</p>
-
-</footer>
-
-
-<<script>
-
-let chartCreated = false;
-
-function showSection(id){
-
-const sections = document.querySelectorAll(".content");
-
-sections.forEach(section => {
-section.classList.add("hidden");
+// YoY %
+const allPct = allData.map((d,i) => {
+  if (i === 0) return null;
+  return +((( d.sales - allData[i-1].sales) / allData[i-1].sales)*100).toFixed(1);
 });
 
-document.getElementById(id).classList.remove("hidden");
-
-if(id === "visualization" && !chartCreated){
-createChart();
-chartCreated = true;
+// ── NAV ─────────────────────────────────────────────────────
+let chartsBuilt = false;
+function show(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  if (id === 'charts' && !chartsBuilt) { buildCharts(); chartsBuilt = true; }
 }
 
+// ── CHARTS ──────────────────────────────────────────────────
+function buildCharts() {
+  const gc  = 'rgba(0,0,0,0.05)';
+  const tk  = '#64748b';
+  const fn  = { family: "'JetBrains Mono', monospace", size: 11 };
+  const tip = { backgroundColor: '#1e293b', titleColor: '#93c5fd', bodyColor: '#e2e8f0', borderColor: '#334155', borderWidth: 1 };
+  const fmt = v => v >= 1e6 ? (v/1e6).toFixed(1)+'M' : (v/1e3).toFixed(0)+'K';
+
+  // 1 ── FULL TREND
+  new Chart(document.getElementById('salesChart'), {
+    type: 'line',
+    data: {
+      labels: allYears,
+      datasets: [
+        {
+          label: 'Historical Sales',
+          data: [...allSales.slice(0, H), ...Array(predicted.length).fill(null)],
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59,130,246,0.08)',
+          fill: true, tension: 0.4,
+          pointRadius: 4, pointBackgroundColor: '#3b82f6', borderWidth: 2.5,
+        },
+        {
+          label: 'Predicted (Haskell)',
+          data: [...Array(H-1).fill(null), allSales[H-1], ...allSales.slice(H)],
+          borderColor: '#f59e0b',
+          backgroundColor: 'rgba(245,158,11,0.07)',
+          fill: false, tension: 0.4, borderDash: [7,3],
+          pointRadius: 4, pointBackgroundColor: '#f59e0b', borderWidth: 2.5,
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: tk, font: fn } }, tooltip: tip },
+      scales: {
+        x: { ticks: { color: tk, font: fn }, grid: { color: gc } },
+        y: { ticks: { color: tk, font: fn, callback: fmt }, grid: { color: gc } }
+      }
+    }
+  });
+
+  // 2 ── PREDICTED BAR
+  new Chart(document.getElementById('predChart'), {
+    type: 'bar',
+    data: {
+      labels: predicted.map(d => d.year),
+      datasets: [{
+        label: 'Predicted Sales',
+        data: predicted.map(d => d.sales),
+        backgroundColor: [
+          'rgba(245,158,11,0.55)', 'rgba(245,158,11,0.62)', 'rgba(245,158,11,0.69)',
+          'rgba(245,158,11,0.76)', 'rgba(245,158,11,0.83)', 'rgba(245,158,11,0.90)',
+        ],
+        borderColor: '#f59e0b',
+        borderWidth: 1.5, borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { labels: { color: tk, font: fn } }, tooltip: tip },
+      scales: {
+        x: { ticks: { color: tk, font: fn }, grid: { color: gc } },
+        y: { ticks: { color: tk, font: fn, callback: fmt }, grid: { color: gc }, beginAtZero: true }
+      }
+    }
+  });
+
+  // 3 ── YoY %
+  new Chart(document.getElementById('pctChart'), {
+    type: 'bar',
+    data: {
+      labels: allYears,
+      datasets: [{
+        label: 'YoY Growth %',
+        data: allPct,
+        backgroundColor: allData.map((_, i) => {
+          if (i === 0) return 'transparent';
+          return i < H ? 'rgba(59,130,246,0.65)' : 'rgba(245,158,11,0.7)';
+        }),
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { labels: { color: tk, font: fn } },
+        tooltip: { ...tip, callbacks: { label: ctx => ' ' + ctx.raw + '%' } }
+      },
+      scales: {
+        x: { ticks: { color: tk, font: fn }, grid: { color: gc } },
+        y: { ticks: { color: tk, font: fn, callback: v => v+'%' }, grid: { color: gc }, beginAtZero: true }
+      }
+    }
+  });
 }
 
-function createChart(){
-
-const ctx = document.getElementById("evChart").getContext("2d");
-
-new Chart(ctx,{
-
-type:"line",
-
-data:{
-
-labels:["2018","2019","2020","2021","2022","2023","2024","2025","2026","2027","2028"],
-
-datasets:[{
-
-label:"EV Adoption Forecast",
-
-data:[2.05,2.26,3.10,6.75,10.5,14,18.4,24.2,31.1,38.5,45.2],
-
-borderColor:"#2563eb",
-borderWidth:3,
-fill:false
-
-}]
-
-},
-
-options:{
-responsive:true
-}
-
+// Build charts immediately when page loads (Charts tab is visible on first visit if linked directly)
+// Also trigger on DOM ready so charts render correctly when user first clicks Charts tab
+window.addEventListener('DOMContentLoaded', () => {
+  // Pre-warm: build charts when the Charts section first becomes visible
+  // via IntersectionObserver so canvas has proper dimensions
+  const chartsSection = document.getElementById('charts');
+  const observer = new IntersectionObserver(entries => {
+    if (entries[0].isIntersecting && !chartsBuilt) {
+      buildCharts();
+      chartsBuilt = true;
+    }
+  });
+  observer.observe(chartsSection);
 });
-
-}
-
 </script>
 </body>
 </html>
