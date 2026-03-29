@@ -39,6 +39,7 @@ main = do
     writeFile "output.json" (toJSON result)
 
     putStrLn "Opening Dashboard..."
+
     callCommand "python3 -m http.server 8000 --directory web"
-   
+
     putStrLn "Done!"

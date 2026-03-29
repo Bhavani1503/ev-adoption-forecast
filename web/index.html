@@ -145,6 +145,7 @@
 
 <header>
   <h1>⚡ EV Adoption Dashboard</h1>
+  <p>ev-adoption-forecast · Haskell Growth Prediction · 2010–2030</p>
   <div class="header-stats">
     <div class="hstat"><div class="hstat-val">15</div><div class="hstat-lbl">History Years</div></div>
     <div class="hstat"><div class="hstat-val">11M</div><div class="hstat-lbl">2024 Sales</div></div>
@@ -163,6 +164,7 @@
 <!-- ═══════════════ OVERVIEW ═══════════════ -->
 <section id="overview" class="section active">
   <div class="sec-title">Project Overview</div>
+  <div class="sec-sub">// ev-adoption-forecast v0.1.0.0 · Haskell + JavaScript</div>
 
   <div class="stat-row">
     <div class="stat-card"><label>Dataset</label><div class="val">15</div><div class="sub">Years · 2010–2024</div></div>
@@ -172,7 +174,9 @@
     <div class="stat-card rose"><label>2030 Forecast</label><div class="val">~44M</div><div class="sub">Growth model</div></div>
   </div>
 
-
+  <div class="info-box">
+    <strong>How this works:</strong> Haskell reads <code style="background:#dbeafe;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px">data.csv</code>, computes the average year-on-year growth rate using a fold, then projects EV sales from 2025 to 2030. The results are exported as <code style="background:#dbeafe;padding:1px 5px;border-radius:3px;font-family:monospace;font-size:12px">output.json</code> and visualized here.
+  </div>
 
   <div class="pipeline">
     <div class="pipe-step"><div class="p-num">01</div><div class="p-name">📥 Read CSV</div><div class="p-desc">data.csv loaded</div></div>
@@ -214,6 +218,7 @@
 <!-- ═══════════════ PREDICTIONS ═══════════════ -->
 <section id="predictions" class="section">
   <div class="sec-title">Predictions · 2025–2030</div>
+  <div class="sec-sub">// Haskell avgGrowthRate + scanl forward projection</div>
 
   <div class="stat-row" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">
     <div class="stat-card amber"><label>2025</label><div class="val" style="font-size:20px">13.9M</div></div>
@@ -256,6 +261,7 @@
 <!-- ═══════════════ CHARTS ═══════════════ -->
 <section id="charts" class="section">
   <div class="sec-title">Visualizations</div>
+  <div class="sec-sub">// EV sales growth 2010–2030 · historical + Haskell predictions</div>
 
   <!-- Chart 1: Full trend line -->
   <div class="chart-card">
@@ -283,6 +289,9 @@
   </div>
 </section>
 
+<footer>
+  <p>EV Adoption Forecast · <span>Haskell</span> + <span>Chart.js</span> · Konda Bhavani · CH.SC.U4CSE24120 · Kurra Venkata Gokul · CH.SC.U4CSE24121</p>
+</footer>
 
 <script>
 // ── DATA ────────────────────────────────────────────────────
